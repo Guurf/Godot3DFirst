@@ -4,8 +4,7 @@ var speed
 const WALK_SPEED = 5.0
 const SPRINT_SPEED = 8.0
 const JUMP_VELOCITY = 7
-const DASH_VELOCITY = 20
-const SENSITIVITY = 0.008
+const SENSITIVITY = 0.004
 const coyote_max = 15
 var coyote_time = coyote_max
 
@@ -16,7 +15,7 @@ var t_bob = 0.0
 
 #fov variables
 const BASE_FOV = 70.0
-const FOV_CHANGE = 4
+const FOV_CHANGE = 1.5
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = 15;
@@ -50,13 +49,11 @@ func _physics_process(delta):
 		speed = SPRINT_SPEED
 	else:
 		speed = WALK_SPEED
-		
 
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.
 	var input_dir = Input.get_vector("left", "right", "up", "down")
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-	
 	
 	if is_on_floor():
 		if direction:
@@ -70,15 +67,6 @@ func _physics_process(delta):
 		velocity.x = lerp(velocity.x, direction.x * speed, delta * 4.0)
 		velocity.z = lerp(velocity.z, direction.z * speed, delta * 4.0)
 	
-			# Handle Dash?
-	if Input.is_action_just_pressed("dash"):
-		velocity.x = direction.x * DASH_VELOCITY
-		velocity.z = direction.z * DASH_VELOCITY
-		if Input.is_action_pressed("up"):
-			velocity.y = camera.rotation.x * (DASH_VELOCITY / 2)
-		elif Input.is_action_pressed("down"):
-			velocity.y = -(camera.rotation.x * (DASH_VELOCITY / 2))
-	
 	# Head Bob
 	t_bob += delta * velocity.length() * float(is_on_floor())
 	camera.transform.origin = _headbob(t_bob)
@@ -90,7 +78,7 @@ func _physics_process(delta):
 
 	if coyote_time < 0: coyote_time = 0
 	move_and_slide()
-	print(direction.y)
+	print(coyote_time)
 func _headbob(time) -> Vector3:
 	var pos = Vector3.ZERO;
 	pos.y = sin(time * BOB_FREQ) * BOB_AMP
