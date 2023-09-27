@@ -3,12 +3,14 @@ extends CharacterBody3D
 var speed
 const WALK_SPEED = 5.0
 const SPRINT_SPEED = 8.0
-const JUMP_VELOCITY = 6
+const JUMP_VELOCITY = 7
 const SENSITIVITY = 0.004
+const coyote_max = 15
+var coyote_time = coyote_max
 
 #bob variables
 const BOB_FREQ = 2.5
-const BOB_AMP = 0.06
+const BOB_AMP = 0.08
 var t_bob = 0.0
 
 #fov variables
@@ -16,7 +18,7 @@ const BASE_FOV = 70.0
 const FOV_CHANGE = 1.5
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
-var gravity = 12;
+var gravity = 15;
 
 @onready var head = $Head
 @onready var camera = $Head/Camera3D
@@ -34,10 +36,13 @@ func _physics_process(delta):
 	# Add the gravity.
 	if not is_on_floor():
 		velocity.y -= gravity * delta
+	else:
+		coyote_time = coyote_max
 
 	# Handle Jump.
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	if Input.is_action_just_pressed("jump") and coyote_time > 0:
 		velocity.y = JUMP_VELOCITY
+		coyote_time = 0
 		
 	# Handle Sprint.
 	if Input.is_action_pressed("sprint"):
@@ -49,6 +54,7 @@ func _physics_process(delta):
 	# As good practice, you should replace UI actions with custom gameplay actions.
 	var input_dir = Input.get_vector("left", "right", "up", "down")
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+	
 	if is_on_floor():
 		if direction:
 			velocity.x = direction.x * speed
@@ -57,20 +63,22 @@ func _physics_process(delta):
 			velocity.x = lerp(velocity.x, direction.x * speed, delta * 7.0)
 			velocity.z = lerp(velocity.z, direction.z * speed, delta * 7.0)
 	else:
+		coyote_time -= 1
 		velocity.x = lerp(velocity.x, direction.x * speed, delta * 4.0)
 		velocity.z = lerp(velocity.z, direction.z * speed, delta * 4.0)
-		
+	
 	# Head Bob
 	t_bob += delta * velocity.length() * float(is_on_floor())
 	camera.transform.origin = _headbob(t_bob)
 	
 	# FOV
-	var velocity_clamped = clamp(velocity.length(), 0.5, SPRINT_SPEED * 2)
+	var velocity_clamped = clamp(velocity.length(), WALK_SPEED, SPRINT_SPEED * 2)
 	var target_fov = BASE_FOV + FOV_CHANGE * velocity_clamped
 	camera.fov = lerp(camera.fov, target_fov, delta * 8.8)
 
+	if coyote_time < 0: coyote_time = 0
 	move_and_slide()
-	
+	print(coyote_time)
 func _headbob(time) -> Vector3:
 	var pos = Vector3.ZERO;
 	pos.y = sin(time * BOB_FREQ) * BOB_AMP

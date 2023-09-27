@@ -1,0 +1,12 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://bts0sei0yfd4g"]
+
+[ext_resource type="Shader" path="res://Shaders/Water.gdshader" id="1_2ohcd"]
+[ext_resource type="Texture2D" uid="uid://cp66yrard3j6o" path="res://Textures/Water 1.jpg" id="2_oxcky"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_2ohcd")
+shader_parameter/direction_and_speed = Vector2(0, 1)
+shader_parameter/scale = Vector2(0.25, 0.25)
+shader_parameter/flip = false
+shader_parameter/albedo = ExtResource("2_oxcky")

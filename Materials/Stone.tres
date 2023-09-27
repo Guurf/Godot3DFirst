@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://5jleictumgst"]
+
+[ext_resource type="Texture2D" uid="uid://uv8om11g7qcf" path="res://Textures/stone-1024.jpg" id="1_ere8h"]
+
+[resource]
+albedo_texture = ExtResource("1_ere8h")
+uv1_scale = Vector3(0.25, 0.25, 0.25)
