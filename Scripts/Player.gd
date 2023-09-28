@@ -82,17 +82,17 @@ func _physics_process(delta):
 		dash_time = 0
 		velocity.x = direction.x * DASH_VELOCITY
 		velocity.z = direction.z * DASH_VELOCITY
-		
-		if Input.is_action_pressed("up"):
-			velocity.y = camera.rotation.x * (DASH_VELOCITY / 2)
-		elif Input.is_action_pressed("down"):
-			velocity.y = -(camera.rotation.x * (DASH_VELOCITY / 2)) + 1
+		velocity.y = 2
+		#if Input.is_action_pressed("up"):
+		#	velocity.y = camera.rotation.x * (DASH_VELOCITY / 2)
+		#elif Input.is_action_pressed("down"):
+		#	velocity.y = -(camera.rotation.x * (DASH_VELOCITY / 2)) + 1
 	
 	if dash_time < DASH_COOLDOWN: dash_time += 1
 	
 	# Terminal Velocity
-	if velocity.y >= 10: velocity.y = 10
-	elif velocity.y <= -15: velocity.y = -15
+	#if velocity.y >= 10: velocity.y = 10
+	#elif velocity.y <= -15: velocity.y = -15
 	
 	# Head Bob
 	t_bob += delta * velocity.length() * float(is_on_floor())
@@ -105,9 +105,9 @@ func _physics_process(delta):
 
 	if coyote_time < 0: coyote_time = 0
 	move_and_slide()
-	print(velocity.y)
+
 func _headbob(time) -> Vector3:
 	var pos = Vector3.ZERO;
 	pos.y = sin(time * BOB_FREQ) * BOB_AMP
-	pos.x = cos(time * BOB_FREQ / 2) * BOB_AMP
+	pos.x = cos(time * BOB_FREQ / 2) * BOB_AMP * 2
 	return pos
