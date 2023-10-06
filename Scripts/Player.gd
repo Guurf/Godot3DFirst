@@ -3,13 +3,21 @@ extends CharacterBody3D
 var speed
 const WALK_SPEED = 5.0
 const SPRINT_SPEED = 8.0
+
 const JUMP_VELOCITY = 7
+const POUND_VELOCITY = -10
+var pounded = 0
+var pound_length = 0
+var pound_timer = 0
 const DASH_VELOCITY = 20
 const DASH_COOLDOWN = 40
+
+
+const SENSITIVITY = 0.008
 var dash_time = DASH_COOLDOWN
 var dash_max = 1
 var dash_count = dash_max
-const SENSITIVITY = 0.008
+
 
 const coyote_max = 15
 var coyote_time = coyote_max
@@ -18,6 +26,8 @@ var coyote_time = coyote_max
 const BOB_FREQ = 2.5
 const BOB_AMP = 0.08
 var t_bob = 0.0
+
+var cam_tilt = 0
 
 #fov variables
 const BASE_FOV = 70.0
@@ -42,16 +52,32 @@ func _physics_process(delta):
 	# Add the gravity.
 	if not is_on_floor():
 		velocity.y -= gravity * delta
+		if pounded == 1: 
+			pound_length += 1
 	else:
+		if pounded == 1 && pound_timer > 0: pound_timer -= 1
+		elif pound_timer <= 0: 
+			pounded = 0
+			pound_length = 0
 		coyote_time = coyote_max
 
 	# Handle Jump.
 	if Input.is_action_just_pressed("jump") and coyote_time > 0:
-		velocity.y = JUMP_VELOCITY
+		if pound_length > 6: velocity.y = JUMP_VELOCITY + 5.2
+		else: velocity.y = JUMP_VELOCITY
+		pound_timer = 0
+		pound_length = 0
+		#pounded = 0
 		coyote_time = 0
 		
+	print ("Jump height:", JUMP_VELOCITY + (pound_length))
+		
 	# Handle Sprint.
-	if Input.is_action_pressed("sprint"):
+	if pounded == 1 and is_on_floor(): 
+		speed = 2
+	elif pounded == 1 and not is_on_floor(): 
+		speed = 4
+	elif Input.is_action_pressed("sprint"):
 		speed = SPRINT_SPEED
 	else:
 		speed = WALK_SPEED
@@ -76,13 +102,13 @@ func _physics_process(delta):
 		velocity.x = lerp(velocity.x, direction.x * speed, delta * 4.0)
 		velocity.z = lerp(velocity.z, direction.z * speed, delta * 4.0)
 	
-	# Handle Dash?
+	# Handle Dash.
 	if Input.is_action_just_pressed("dash") and dash_count > 0 and not is_on_floor():
 		dash_count -= 1
 		dash_time = 0
 		velocity.x = direction.x * DASH_VELOCITY
 		velocity.z = direction.z * DASH_VELOCITY
-		velocity.y = 2
+		velocity.y = 3
 		#if Input.is_action_pressed("up"):
 		#	velocity.y = camera.rotation.x * (DASH_VELOCITY / 2)
 		#elif Input.is_action_pressed("down"):
@@ -90,16 +116,34 @@ func _physics_process(delta):
 	
 	if dash_time < DASH_COOLDOWN: dash_time += 1
 	
+	# Handle Pound.
+	if Input.is_action_just_pressed("crouch") and not is_on_floor():
+		velocity.y = POUND_VELOCITY
+		pounded = 1
+		pound_timer = 15
+	print("POUNDED?: ", pounded)
+	print("Length: ", pound_length)
 	# Terminal Velocity
-	#if velocity.y >= 10: velocity.y = 10
-	#elif velocity.y <= -15: velocity.y = -15
+	if velocity.y >= 15: velocity.y = 15
+	elif velocity.y <= -15: velocity.y = -15
 	
 	# Head Bob
 	t_bob += delta * velocity.length() * float(is_on_floor())
 	camera.transform.origin = _headbob(t_bob)
 	
+	# Head Tilt
+	if Input.is_action_pressed("left"):
+		cam_tilt += lerpf(0.0, 5, 0.05)
+	elif Input.is_action_pressed("right"):
+		cam_tilt -= lerpf(0.0, 5, 0.05)
+	else:
+		cam_tilt = lerpf(head.rotation_degrees.z, 0.0, 0.2)
+		if cam_tilt >= -0.1 and cam_tilt <= 0.1: cam_tilt = int(0.0)
+	cam_tilt = clamp(cam_tilt, -2, 2)
+	head.rotation.z = deg_to_rad(cam_tilt)
+	
 	# FOV
-	var velocity_clamped = clamp(velocity.length(), WALK_SPEED, SPRINT_SPEED * 2)
+	var velocity_clamped = clamp(velocity.length(), WALK_SPEED-2, SPRINT_SPEED * 2)
 	var target_fov = BASE_FOV + FOV_CHANGE * velocity_clamped
 	camera.fov = lerp(camera.fov, target_fov, delta * 8.8)
 

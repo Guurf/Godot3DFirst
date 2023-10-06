@@ -6,4 +6,4 @@
 transparency = 1
 blend_mode = 1
 albedo_texture = ExtResource("1_w037e")
-uv1_scale = Vector3(2, 2, 2)
+uv1_scale = Vector3(3, 3, 3)
